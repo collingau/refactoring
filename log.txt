@@ -1,3 +1,4 @@
+5806808 Task 2.1 update log.txt
 52c70ff Task 2.1 Extraction
 0149c38 Task 1.2 changed log.txt file
 c4e5c3f Task 1.1 fixed CheckStyle issues
