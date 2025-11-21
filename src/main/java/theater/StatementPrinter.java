@@ -8,17 +8,24 @@ import java.util.Map;
  * This class generates a statement for a given invoice of performances.
  */
 public class StatementPrinter {
-    private Invoice invoice;
-    private Map<String, Play> plays;
+    private final Invoice invoice;
+    private final Map<String, Play> plays;
 
-    public StatementPrinter(Invoice invoice, Map<String, Play> plays) {
+    /**
+     * Creates a new printer for the given invoice and play map.
+     *
+     * @param invoice the invoice to print
+     * @param plays   map from play ID to play data
+     */
+    public StatementPrinter(final Invoice invoice, final Map<String, Play> plays) {
         this.invoice = invoice;
         this.plays = plays;
     }
 
     /**
      * Returns a formatted statement of the invoice associated with this printer.
-     * @return the formatted statement
+     *
+     * @return a formatted text statement of the invoice
      * @throws RuntimeException if one of the play types is not known
      */
     public String statement() {
@@ -27,11 +34,13 @@ public class StatementPrinter {
         );
 
         // print line for each order
-        for (Performance p : invoice.getPerformances()) {
-            result.append(String.format("  %s: %s (%s seats)%n",
+        for (final Performance p : invoice.getPerformances()) {
+            result.append(String.format(
+                    "  %s: %s (%s seats)%n",
                     getPlay(p).getName(),
                     usd(getAmount(p)),
-                    p.getAudience()));
+                    p.getAudience()
+            ));
         }
 
         result.append(String.format("Amount owed is %s%n", usd(getTotalAmount())));
@@ -41,15 +50,21 @@ public class StatementPrinter {
 
     /**
      * Calculates the cost for a given performance based on its play type.
+     *
+     * @param performance the performance to calculate the amount for
+     * @return the total amount owed for that performance in cents
+     * @throws RuntimeException if the play type is unknown
      */
     private int getAmount(final Performance performance) {
+        final String type = getPlay(performance).getType();
         int result;
-        switch (getPlay(performance).getType()) {
+        switch (type) {
             case "tragedy":
                 result = Constants.TRAGEDY_BASE_AMOUNT;
                 if (performance.getAudience() > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
                     result += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
-                            * (performance.getAudience() - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
+                            * (performance.getAudience()
+                            - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
                 }
                 break;
             case "comedy":
@@ -57,23 +72,25 @@ public class StatementPrinter {
                 if (performance.getAudience() > Constants.COMEDY_AUDIENCE_THRESHOLD) {
                     result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
                             + Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
-                            * (performance.getAudience() - Constants.COMEDY_AUDIENCE_THRESHOLD);
+                            * (performance.getAudience()
+                            - Constants.COMEDY_AUDIENCE_THRESHOLD);
                 }
                 result += Constants.COMEDY_AMOUNT_PER_AUDIENCE * performance.getAudience();
                 break;
             default:
-                throw new RuntimeException(String.format(
-                        "unknown type: %s", getPlay(performance).getType()));
+                throw new RuntimeException(String.format("unknown type: %s", type));
         }
         return result;
     }
 
     /**
      * Calculates the total amount owed for all performances.
+     *
+     * @return the total amount owed for the invoice in cents
      */
     private int getTotalAmount() {
         int result = 0;
-        for (Performance p : invoice.getPerformances()) {
+        for (final Performance p : invoice.getPerformances()) {
             result += getAmount(p);
         }
         return result;
@@ -81,21 +98,27 @@ public class StatementPrinter {
 
     /**
      * Calculates the total volume credits earned for all performances.
+     *
+     * @return the total volume credits for the invoice
      */
     private int getTotalVolumeCredits() {
         int result = 0;
-        for (Performance p : invoice.getPerformances()) {
+        for (final Performance p : invoice.getPerformances()) {
             result += getVolumeCredits(p);
         }
         return result;
     }
 
     /**
-     * Calculates volume credits contributed by a single performance.
+     * Calculates the volume credits contributed by a single performance.
+     *
+     * @param performance the performance to calculate credits for
+     * @return the number of volume credits earned for that performance
      */
     private int getVolumeCredits(final Performance performance) {
         int result = Math.max(
-                performance.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+                performance.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0
+        );
         if ("comedy".equals(getPlay(performance).getType())) {
             result += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
         }
@@ -103,7 +126,10 @@ public class StatementPrinter {
     }
 
     /**
-     * Helper to retrieve the Play object for a given Performance.
+     * Retrieves the {@link Play} object for a given {@link Performance}.
+     *
+     * @param performance the performance whose play is being retrieved
+     * @return the Play object corresponding to the performance
      */
     private Play getPlay(final Performance performance) {
         return plays.get(performance.getPlayID());
@@ -111,6 +137,9 @@ public class StatementPrinter {
 
     /**
      * Converts an integer amount (in cents) into a USD currency string.
+     *
+     * @param amount the amount in cents
+     * @return the formatted USD currency string
      */
     private String usd(final int amount) {
         return NumberFormat.getCurrencyInstance(Locale.US)

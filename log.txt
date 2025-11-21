@@ -1,3 +1,4 @@
+217548a Task 2.4 and updated log.txt
 d14dfa3 Task 2.3 and updated log.txt
 336cd6d Task 2.2 and updated log.txt
 5806808 Task 2.1 update log.txt
